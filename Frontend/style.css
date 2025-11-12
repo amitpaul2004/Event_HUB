@@ -92,7 +92,7 @@ a {
     background-position: center;
     height: 90vh;
     display: flex;
-    align-items: center;
+    align-items: center;    
     padding: 0 2rem;
     color: #ffffff;
 }
@@ -159,7 +159,7 @@ a {
     overflow: hidden; /* Ensures blur doesn't bleed out if content overflows */
     
     /* Background Image for the features section */
-    background-image: url(Frontend\img\images.jpg); /* Replace with your desired image */
+    background-image: url('../Frontend/img/images.jpg'); /* Replace with your desired image */
     background-size: cover;
     background-position: center;
 }
@@ -233,4 +233,250 @@ a {
     font-size: 0.95rem;
     color: #e0e0e0; /* Light grey paragraph color */
     max-width: 250px;
+}
+
+/* --- NEW: FEATURED EVENTS SECTION --- */
+
+.events {
+    background-color: #f7f9fc; /* Light background to match image */
+    color: #333; /* Dark text for readability on light background */
+    padding: 5rem 2rem;
+    text-align: center;
+}
+
+.events-section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.events h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50; /* Dark blue-grey heading */
+    margin-bottom: 1rem;
+}
+
+.events .subheading {
+    font-size: 1.1rem;
+    color: #555;
+    margin-bottom: 3rem;
+}
+
+.events-container {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap; /* Allows cards to stack on small screens */
+}
+
+.event-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Subtle shadow */
+    overflow: hidden; /* To round the image corners */
+    flex: 1; /* Allows cards to grow */
+    min-width: 320px; /* Minimum width before stacking */
+    max-width: 360px; /* Maximum width */
+    text-align: left; /* Aligns card content to the left */
+    display: flex;
+    flex-direction: column; /* Stacks image, content, and button */
+}
+
+.event-image-container {
+    position: relative;
+    height: 220px;
+}
+
+.event-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Prevents image from stretching */
+    display: block;
+}
+
+.event-tag {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background-color: #4a90e2; /* Blue tag background */
+    color: #ffffff;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.event-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Makes content fill remaining space */
+}
+
+.event-content h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.event-info {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    flex-grow: 1; /* Pushes button to the bottom */
+}
+
+.event-info li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #555;
+    font-size: 0.9rem;
+    margin-bottom: 0.6rem;
+}
+
+.event-info li i {
+    color: #4a90e2; /* Blue icon color */
+    width: 16px;
+    text-align: center;
+}
+
+/* New button style for cards */
+.btn-details {
+    background-color: #4a90e2;
+    color: #ffffff;
+    text-align: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+}
+
+.btn-details:hover {
+    background-color: #3a7bc2;
+}
+
+/* --- Event Card Hover Animations --- */
+
+.event-card {
+    /* ... keep all existing styles ... */
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    flex: 1;
+    min-width: 320px;
+    max-width: 360px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+
+    /* ADD THIS LINE: */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* This rule makes the card "pop up" */
+.event-card:hover {
+    transform: scale(1.03); /* Lifts the card up (enlarges it) */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); /* Adds a stronger shadow */
+}
+
+.event-image-container img {
+    /* ... keep all existing styles ... */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+
+    /* ADD THIS LINE: */
+    transition: transform 0.3s ease;
+}
+
+/* This rule makes the image "zoom out" */
+.event-card:hover .event-image-container img {
+    transform: scale(0.95); /* Scales the image down slightly */
+}
+
+/* --- 1. Feature Card Icon Animation --- */
+
+.feature-card {
+    /* ...all existing styles... */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Add transition */
+}
+
+/* Make the whole card lift up a bit on hover */
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.feature-card .icon-circle {
+    /* ...all existing styles... */
+    transition: transform 0.3s ease;
+}
+
+/* This makes the icon circle grow and rotate */
+.feature-card:hover .icon-circle {
+    transform: scale(1.1) rotate(15deg);
+}
+
+.feature-card .icon-circle i {
+    /* ...all existing styles... */
+    transition: transform 0.3s ease;
+}
+
+/* This rotates the icon in the *opposite* direction for a cool effect */
+.feature-card:hover .icon-circle i {
+    transform: rotate(-15deg);
+}
+
+/* --- 2. Nav Link Underline Animation --- */
+
+.nav-links a {
+    /* ...all existing styles... */
+    position: relative; /* Required for the pseudo-element */
+    padding-bottom: 0.25rem;
+}
+
+/* This creates the underline element */
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px; /* Same height as your active border */
+    background-color: #4a90e2;
+    
+    transform: scaleX(0); /* Starts hidden (0% width) */
+    transform-origin: bottom right;
+    transition: transform 0.3s ease-out;
+}
+
+/* This makes the underline "wipe" from right to left */
+.nav-links a:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+/* We need to hide this animation for the 'active' link, 
+   since it already has a permanent underline */
+.nav-links a.active::after {
+    display: none;
+}
+
+/* --- 3. Hero Button Arrow Animation --- */
+
+.btn-primary .arrow {
+    display: inline-block; /* Allows us to use transform */
+    transition: transform 0.3s ease;
+}
+
+.btn-primary:hover .arrow {
+    transform: translateX(5px); /* Moves the arrow 5px to the right */
+}
+
+/* Let's also make the button hover effect a bit stronger */
+.btn-primary:hover {
+    transform: translateY(-3px) scale(1.02); /* Lifts up and grows slightly */
+    box-shadow: 0 6px 20px rgba(142, 45, 226, 0.5);
 }
