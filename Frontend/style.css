@@ -49,10 +49,54 @@ a {
     gap: 1.5rem;
 }
 
+/* --- 2. Nav Link Underline Animation (UPDATED) --- */
+
 .nav-links a {
-    color: #c5c6c7;
+    color: #c5c6c7; /* Default light grey color */
     font-weight: 600;
     padding-bottom: 0.25rem;
+    position: relative; /* Required for the pseudo-element */
+}
+
+/* This creates the base underline element (hidden) */
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #4a90e2; /* Blue underline color */
+
+    transform: scaleX(0); /* Starts hidden (0% width) */
+    transform-origin: bottom right;
+    transition: transform 0.3s ease-out;
+}
+
+/* This animates the underline on HOVER (for non-active links) */
+.nav-links a:hover:not(.active)::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+/* This changes the text color on hover */
+.nav-links a:hover {
+    color: #ffffff;
+}
+
+/* This is your NEW active link style */
+.nav-links a.active {
+    color: #ffffff; /* Makes active text white */
+    /* The border-bottom is REMOVED */
+}
+
+/* This styles the active link's underline to be visible */
+.nav-links a.active::after {
+    transform: scaleX(1); /* Makes the underline visible */
+    transform-origin: bottom left;
+
+    /* This applies the wipe-in animation on page load! */
+    animation: wipeIn 0.5s ease-out forwards; 
 }
 
 .nav-links a:hover {
@@ -532,4 +576,76 @@ a {
     padding-top: 2rem;
     font-size: 0.9rem;
     color: #888;
+}
+/* --- Animation for .btn-nav --- */
+
+/* 1. Add these properties to your existing .btn-nav rule */
+.btn-nav {
+    background-color: #4a90e2;
+    color: #ffffff;
+    
+    /* Add these two lines */
+    position: relative; /* Required for the pseudo-element */
+    overflow: hidden; /* Hides the shine until it crosses */
+}
+
+/* 2. Add this NEW rule for the shine element */
+.btn-nav::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%; /* Start off-screen to the left */
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        120deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.3), /* This is the white 'shine' */
+        transparent
+    );
+    transition: all 0.6s ease; /* Speed of the shine */
+}
+
+/* 3. Add this NEW rule for the hover state */
+.btn-nav:hover::before {
+    left: 100%; /* Moves the shine all the way to the right */
+}
+
+/* 4. Let's also add a subtle lift to the button on hover */
+.btn-nav:hover {
+    background-color: #3a7bc2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+.nav-right .btn-nav:hover i {
+    transform: translateX(5px); /* Moves icon 5px to the right */
+}
+
+/* 3. Add a hover state for the button itself */
+.btn-nav:hover {
+    background-color: #3a7bc2;
+    transform: translateY(-2px); /* Lifts the button */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds shadow */
+}
+.nav-right .btn i {
+    margin-left: 0.5rem; 
+}
+/* Add this for smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* --- Global Styles --- */
+* {
+    /* ... your existing rules ... */
+}
+@keyframes wipeIn {
+    from {
+        transform: scaleX(0);
+        transform-origin: bottom left;
+    }
+    to {
+        transform: scaleX(1);
+        transform-origin: bottom left;
+    }
 }
