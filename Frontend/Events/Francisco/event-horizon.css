@@ -1,0 +1,107 @@
+/* --- Global Styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f0f2f5; /* Light grey background for the whole page */
+    color: #333333;
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- Header / Navigation Bar --- */
+.navbar {
+    background-color: transparent; /* Remains transparent */
+    padding: 1rem 2rem;
+    position: absolute; /* Position over the hero image */
+    width: 100%;
+    z-index: 10; /* Ensure it's above the image */
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    max-width: 1200px; /* Constrain internal content width */
+    margin: 0 auto;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2c3e50; /* Darker color for logo */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* --- Hero Section (UPDATED) --- */
+.hero-section {
+    position: relative;
+    /* This URL is from Unsplash and matches the vibe of the image. */
+background-image: url('Frontend/Events Francisco/img/Conference Workshop Ideas.png');
+background-size: cover;
+background-position: center;
+background-repeat: no-repeat;
+    min-height: 80vh; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #ffffff; /* White text for readability */
+    padding: 0 2rem;
+    z-index: 1; /* For stacking context */
+
+    /* Remove max-width and margin auto for full width */
+    /* Remove box-shadow */
+    border-radius: 0 0 12px 12px; /* Rounded corners only at the bottom */
+    /* No top margin, sits flush with the top */
+}
+
+/* Dark overlay for text readability */
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.25); /* Lighter overlay as per the image */
+    z-index: 2; /* Below content, above image */
+    border-radius: 0 0 12px 12px; /* Match hero section's bottom radius */
+}
+
+.hero-content {
+    position: relative; /* Bring content above the overlay */
+    z-index: 3;
+    max-width: 800px;
+    padding: 2rem;
+}
+
+.hero-content h1 {
+    font-size: 3.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8); /* Stronger shadow for better readability */
+}
+
+.hero-content p {
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.7); /* Stronger shadow for better readability */
+}
+
+/* Adjust navbar padding to align with the hero section's content width */
+.navbar .navbar-container {
+    max-width: 1200px;
+    padding: 0; /* Remove horizontal padding here, it's already on .navbar */
+}
