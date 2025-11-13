@@ -232,6 +232,19 @@ sendReset.addEventListener('click', ()=>{
   alert('Password reset link sent to ' + forgotEmail.value);
   forgotModal.style.display='none';
 });
+
+    function showSuccess(){
+      const tpl = document.getElementById('successTpl');
+      const node = tpl.content.cloneNode(true);
+      const parent = form.parentElement;
+      parent.replaceChild(node, form);
+      const blobs = document.querySelectorAll('.blob');
+      blobs.forEach((b,i)=>{b.style.transition='transform 700ms, opacity 700ms'; b.style.transform='scale(1.2)'; b.style.opacity = i===0? '0.36':'0.18'});
+      setTimeout(()=>{card.style.transition='transform 500ms ease, opacity 500ms';card.style.transform='scale(0.96) translateY(-6px)';card.style.opacity='0.98';}, 900);
+      // redirect to dashboard after the success animation completes
+      setTimeout(()=>{ window.location.href = 'dashborad.html'; }, 1600);
+    }
+
 </script>
 
 </body>
