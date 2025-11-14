@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Dashboard — Event Horizon</title>
+  <title>Admin Dashboard — Event_Hub</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;color:#0b2133}
@@ -45,6 +45,131 @@
     tbody tr{transition:all 0.36s ease}
     .sidebar, .header, .card{transition:all 0.36s ease}
     @media (max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:18px}}
+
+    /* ========= OVERLAY ========= */
+.att-overlay {
+  display:none;
+  position:fixed;
+  inset:0;
+  backdrop-filter:blur(12px);
+  background:rgba(0,0,0,0.45);
+  z-index:999;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ========= PANEL (SLIDE IN) ========= */
+.att-panel {
+  width:900px;
+  max-width:92%;
+  background:rgba(255,255,255,0.35);
+  backdrop-filter:blur(18px);
+  border-radius:18px;
+  padding:28px;
+  border:1px solid rgba(255,255,255,0.3);
+  transform:translateY(80px);
+  opacity:0;
+  transition:all .45s cubic-bezier(.18,.75,.35,1.2);
+}
+
+/* ========= DARK MODE ========= */
+@media (prefers-color-scheme: dark) {
+  .att-panel {
+    background:rgba(20,20,25,0.45);
+    color:white;
+    border-color:rgba(255,255,255,0.15);
+  }
+  .att-table th, .att-table td { color:#dfe4ee; }
+}
+
+/* ========= HEADER ========= */
+.att-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+}
+.close-btn {
+  font-size:28px;
+  background:none;
+  border:none;
+  color:rgb(230,230,240);
+  cursor:pointer;
+}
+
+/* ========= CARD ========= */
+.att-card {
+  background:rgba(255,255,255,0.45);
+  backdrop-filter:blur(12px);
+  padding:18px;
+  border-radius:14px;
+  margin-top:20px;
+}
+.att-card-top {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.att-small {
+  color:#445; 
+  margin-top:4px;
+  font-size:13px;
+}
+
+/* ========= TABLE ========= */
+.att-table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:12px;
+}
+.att-table th {
+  padding:8px;
+  color:#4f6b9f; 
+  text-align:left;
+}
+.att-table td {
+  padding:10px;
+  color:#1e2d3e;
+}
+
+/* ========= RECOMMENDATIONS BUTTON ========= */
+.rec-btn {
+  background:#2563eb;
+  color:white;
+  padding:10px 16px;
+  border-radius:10px;
+  border:none;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+  font-weight:600;
+  position:relative;
+  overflow:hidden;
+}
+
+.rec-spinner {
+  width:18px;
+  height:18px;
+  border:3px solid rgba(255,255,255,0.25);
+  border-top-color:white;
+  border-radius:50%;
+  display:none;
+  animation:spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ========= RECOMMENDATION BOX ========= */
+.rec-box {
+  display:none;
+  background:white;
+  padding:16px;
+  border-radius:12px;
+  margin-top:18px;
+  border:1px solid #d4e1f7;
+}
+
   </style>
 </head>
 <body>
@@ -52,7 +177,7 @@
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">EH</div>
-      <div><h4>Event Horizon</h4></div>
+      <div><h4><b>Event_Hub</b></h4></div>
     </div>
 
     <nav class="nav" aria-label="Main navigation">
@@ -118,6 +243,47 @@
       </div>
     </div>
   </div>
+  
+  <!-- Attendees Slide-in Modal -->
+<div id="attModal" class="att-overlay">
+  <div id="attPanel" class="att-panel">
+    
+    <div class="att-header">
+      <div>
+        <h2 id="attTitle"></h2>
+        <p>Track participation and get AI-powered recommendations.</p>
+      </div>
+      <button id="closeAtt" class="close-btn">✕</button>
+    </div>
+
+    <div class="att-card">
+      <div class="att-card-top">
+        <div>
+          <h3>Attendee List</h3>
+          <p id="attCount" class="att-small"></p>
+        </div>
+
+        <button id="recBtn" class="rec-btn">
+          <span class="rec-label">⭐ Get Recommendations</span>
+          <span class="rec-spinner"></span>
+        </button>
+      </div>
+
+      <table class="att-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Email</th><th>Company</th><th>Engagement</th>
+          </tr>
+        </thead>
+        <tbody id="attTableBody"></tbody>
+      </table>
+
+      <div id="recBox" class="rec-box"></div>
+    </div>
+
+  </div>
+</div>
+
 
 <script>
 /* Data and rendering */
@@ -141,7 +307,7 @@ function renderRows(){
       <td><span class="count">${ev.attendees}</span></td>
       <td>
         <div class="actions">
-          <button class="btn" data-idx="${idx}" data-action="view">👥 View Attendees</button>
+          <button class="btn" onclick="openAttendees(INDEX)">👥 View Attendees</button>
           <button class="btn secondary" data-idx="${idx}" data-action="edit">✏️ Edit</button>
         </div>
       </td>
@@ -266,6 +432,96 @@ createModal.addEventListener('click', (e)=>{
   if(e.target === createModal) closeCreateModal();
 });
 document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeCreateModal(); });
+
+// LOAD FROM DATABASE / API
+async function loadAttendeesFromDB(eventName) {
+  const response = await fetch(`/api/attendees?event=${encodeURIComponent(eventName)}`);
+  return await response.json();
+}
+
+// OPEN POPUP (SLIDE IN)
+async function openAttendees(eventName) {
+  const modal = document.getElementById("attModal");
+  const panel = document.getElementById("attPanel");
+  
+  modal.style.display = "flex";
+
+  // Load attendees via API
+  const attendees = await loadAttendeesFromDB(eventName);
+
+  // Insert Title
+  document.getElementById("attTitle").textContent =
+    `Attendees for ${eventName}`;
+
+  // Insert count
+  document.getElementById("attCount").textContent =
+    `${attendees.length} people have registered for this event.`;
+
+  // Insert attendee rows
+  const body = document.getElementById("attTableBody");
+  body.innerHTML = "";
+
+  attendees.forEach(a => {
+    body.innerHTML += `
+      <tr>
+        <td style="font-weight:600">${a.name}</td>
+        <td>${a.email}</td>
+        <td>${a.company}</td>
+        <td>${a.minutes}min • ${a.questions} Qs • ${a.rating} ⭐</td>
+      </tr>
+    `;
+  });
+
+  // SLIDE-IN animation
+  setTimeout(() => {
+    panel.style.opacity = "1";
+    panel.style.transform = "translateY(0)";
+  }, 20);
+}
+
+// CLOSE POPUP
+function closeAttendees() {
+  const modal = document.getElementById("attModal");
+  const panel = document.getElementById("attPanel");
+  
+  panel.style.opacity = "0";
+  panel.style.transform = "translateY(80px)";
+  
+  setTimeout(() => modal.style.display = "none", 350);
+}
+
+document.getElementById("closeAtt").onclick = closeAttendees;
+
+
+// ⭐ GET RECOMMENDATIONS
+async function showRecommendations() {
+  const btn = document.getElementById("recBtn");
+  const label = document.querySelector(".rec-label");
+  const spinner = document.querySelector(".rec-spinner");
+  const box = document.getElementById("recBox");
+
+  label.textContent = "Thinking...";
+  spinner.style.display = "inline-block";
+  btn.disabled = true;
+
+  // simulate AI wait time
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Example: AI recommendations
+  box.style.display = "block";
+  box.innerHTML = `
+    <h4>AI Recommendations</h4>
+    <ul style="margin-left:20px; line-height:1.6;">
+      <li>Send personalized follow-ups to top performers.</li>
+      <li>Encourage low-engagement attendees to network more.</li>
+      <li>Offer session recording to attendees with fewer questions.</li>
+    </ul>
+  `;
+
+  label.textContent = "⭐ Get Recommendations";
+  spinner.style.display = "none";
+  btn.disabled = false;
+}
 
 </script>
 </body>
