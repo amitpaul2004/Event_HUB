@@ -120,6 +120,85 @@
   </div>
   
 
+  <!-- Attendees Popup Modal -->
+<div id="attPopup" style="
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.55);
+    backdrop-filter:blur(6px);
+    z-index:500;
+    align-items:center;
+    justify-content:center;
+">
+  <div id="attBox" style="
+      width:900px; max-width:95%;
+      background:#ffffff;
+      border-radius:12px;
+      padding:28px;
+      border:1px solid #dde6f5;
+      box-shadow:0 25px 80px rgba(0,0,0,0.35);
+      transform:scale(0.85);
+      opacity:0;
+  ">
+    
+    <div style="display:flex;justify-content:space-between;align-items:start;">
+      <div>
+        <h2 id="attEventTitle" style="margin-bottom:6px; font-weight:800;"></h2>
+        <p style="color:#678; font-size:14px;">
+          Track participation and get AI-powered recommendations for engagement.
+        </p>
+      </div>
+
+      <button onclick="closeAttendees()" style="
+          background:none;border:0;
+          font-size:26px;cursor:pointer;color:#445;">
+        ✕
+      </button>
+    </div>
+
+    <div style="
+        background:#f7faff;
+        border:1px solid #d4e1f7;
+        margin-top:18px;
+        padding:20px;
+        border-radius:10px;
+    ">
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 style="margin:0;">Attendee List</h3>
+          <p id="attCount" style="margin:4px 0 12px; color:#678; font-size:13px;"></p>
+        </div>
+
+        <button id="recBtn" onclick="showRecommendations()" style="
+            background:#2563eb; color:white;
+            padding:10px 18px;
+            border:none; border-radius:8px;
+            font-weight:600;
+            cursor:pointer;
+        ">⭐ Get Recommendations</button>
+      </div>
+
+      <table style="width:100%; border-collapse:collapse; margin-top:12px;">
+        <thead>
+          <tr style="text-align:left; color:#678;">
+            <th style="padding:8px;">Name</th>
+            <th style="padding:8px;">Email</th>
+            <th style="padding:8px;">Company</th>
+            <th style="padding:8px;">Engagement</th>
+          </tr>
+        </thead>
+        <tbody id="attTableBody"></tbody>
+      </table>
+
+      <div id="recBox" style="display:none; margin-top:16px; padding:16px; background:#fff; border-radius:10px; border:1px solid #dce4f5;">
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
 <script>
 /* Data and rendering */
 const events = [
@@ -142,7 +221,10 @@ function renderRows(){
       <td><span class="count">${ev.attendees}</span></td>
       <td>
         <div class="actions">
-          <button class="btn" onclick="openAttendees(INDEX)">👥 View Attendees</button>
+          <button class="btn" onclick="openAttendees('Next.js Global Summit')">
+  👥 View Attendees
+</button>
+
           <button class="btn secondary" data-idx="${idx}" data-action="edit">✏️ Edit</button>
         </div>
       </td>
@@ -267,6 +349,84 @@ createModal.addEventListener('click', (e)=>{
   if(e.target === createModal) closeCreateModal();
 });
 document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeCreateModal(); });
+
+// SAMPLE ATTENDEES DATA  (You can replace with your real data)
+const attendeesData = {
+  "Next.js Global Summit": [
+    {name:"Alice Johnson", email:"alice@example.com", company:"TechCorp", minutes:240, questions:5, rating:5},
+    {name:"Bob Williams", email:"bob@example.com", company:"Innovate LLC", minutes:210, questions:1, rating:4},
+    {name:"Charlie Brown", email:"charlie@example.com", company:"Solutions Inc.", minutes:180, questions:0, rating:3}
+  ]
+};
+
+
+// 🎉 OPEN ATTENDEES POPUP
+function openAttendees(eventName){
+  const popup = document.getElementById("attPopup");
+  const box = document.getElementById("attBox");
+
+  // Insert event title
+  document.getElementById("attEventTitle").textContent =
+    "Attendees for " + eventName;
+
+  // Insert attendee count
+  const list = attendeesData[eventName] || [];
+  document.getElementById("attCount").textContent =
+    `${list.length} people have registered for this event.`;
+
+  // Fill table
+  const tbody = document.getElementById("attTableBody");
+  tbody.innerHTML = "";
+
+  list.forEach(a => {
+    tbody.innerHTML += `
+      <tr>
+        <td style="padding:8px; font-weight:600;">${a.name}</td>
+        <td style="padding:8px;">${a.email}</td>
+        <td style="padding:8px;">${a.company}</td>
+        <td style="padding:8px;">${a.minutes}min • ${a.questions} Qs • ${a.rating} ⭐</td>
+      </tr>
+    `;
+  });
+
+  // Show popup
+  popup.style.display = "flex";
+
+  // Animation
+  setTimeout(() => {
+    box.style.opacity = "1";
+    box.style.transform = "scale(1)";
+    box.style.transition = "all 0.35s ease";
+  }, 10);
+}
+
+
+// ❌ CLOSE POPUP
+function closeAttendees(){
+  const popup = document.getElementById("attPopup");
+  const box = document.getElementById("attBox");
+
+  box.style.opacity = "0";
+  box.style.transform = "scale(0.85)";
+
+  setTimeout(() => popup.style.display = "none", 250);
+}
+
+
+// ⭐ SHOW RECOMMENDATIONS
+function showRecommendations(){
+  const rec = document.getElementById("recBox");
+  rec.style.display = "block";
+  rec.innerHTML = `
+    <h4 style="margin-bottom:8px;">Recommended Actions</h4>
+    <ul style="color:#345; line-height:1.6;">
+      <li>Send personalized follow-up to high-engagement users.</li>
+      <li>Encourage low-engagement attendees with networking invites.</li>
+      <li>Share event recording with attendees who asked fewer questions.</li>
+    </ul>
+  `;
+}
+
 
 </script>
 </body>
