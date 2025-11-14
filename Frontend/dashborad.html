@@ -5,140 +5,60 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin Dashboard — Event Horizon</title>
   <style>
-    /* Minimal reset */
     *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;color:#0b2133}
-
-    /* layout */
+    html,body{height:100%;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;color:#0b2133}
     :root{
-      --bg:#e9f0fb;
-      --sidebar:#f6f9ff;
-      --accent:#2b66d5;
-      --card:#ffffff;
-      --muted:#6b7a89;
-      --border: #e1e8f5;
+      --bg:#e9f0fb; --sidebar:#f6f9ff; --accent:#2b66d5; --card:#ffffff; --muted:#6b7a89; --border:#e1e8f5;
     }
-
     body{background:var(--bg);display:flex}
-
-    .sidebar{
-      width:230px;background:var(--sidebar);min-height:100vh;border-right:1px solid var(--border);padding:22px 18px;position:fixed;left:0;top:0;overflow:auto
-    }
-
+    /* Sidebar */
+    .sidebar{width:230px;background:var(--sidebar);min-height:100vh;border-right:1px solid var(--border);padding:22px 18px;position:fixed;left:0;top:0;overflow:auto}
     .brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
     .brand .logo{width:34px;height:34px;border-radius:6px;background:linear-gradient(135deg,var(--accent),#7c9df0);display:grid;place-items:center;color:white;font-weight:700}
     .brand h4{font-size:15px;color:#0b2133}
-
     .nav{margin-top:8px}
-    .nav a{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;text-decoration:none;color:var(--accent);font-weight:600;background:rgba(43,102,213,0.08);margin-bottom:8px}
-    .nav a .icon{width:20px;height:20px;border-radius:4px;display:inline-grid;place-items:center;background:rgba(43,102,213,0.12);color:var(--accent);font-size:12px}
-
+    .nav a{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;text-decoration:none;color:var(--accent);font-weight:600;background:transparent;margin-bottom:8px;cursor:pointer}
+    .nav a.active{box-shadow:inset 0 0 0 3px rgba(43,102,213,0.06);background:linear-gradient(90deg,rgba(43,102,213,0.06),rgba(43,102,213,0.03));border-left:3px solid var(--accent);padding-left:14px}
+    .nav a:hover{transform:translateX(4px);transition:all 160ms}
     .create{display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;text-decoration:none;color:#21364a;font-weight:600;margin-top:8px}
-
-    /* main area */
+    /* Main */
     .main{margin-left:230px;padding:34px;flex:1}
-    .header{display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:20px;opacity:0;transform:translateY(-10px)}
     .title{font-size:28px;font-weight:700;color:#0b2133}
     .subtitle{color:var(--muted);margin-top:6px}
-
-    /* card */
-    .card{margin-top:22px;background:var(--card);border-radius:10px;padding:22px;border:1px solid var(--border);box-shadow:0 6px 20px rgba(14,30,60,0.04)}
+    .card{margin-top:22px;background:var(--card);border-radius:10px;padding:22px;border:1px solid var(--border);box-shadow:0 6px 20px rgba(14,30,60,0.04);opacity:0;transform:scale(0.98)}
     .card h3{font-size:20px;margin-bottom:6px}
     .card p{color:var(--muted);font-size:13px;margin-bottom:16px}
-
     table{width:100%;border-collapse:collapse}
-    thead th{padding:18px 12px;text-align:left;color:#2470d9;font-weight:700;border-bottom:1px solid var(--border)}
-    tbody td{padding:18px 12px;border-bottom:1px solid var(--border);color:#244054}
-    tbody tr:last-child td{border-bottom:0}
-
+    thead th{padding:14px 12px;text-align:left;color:#2470d9;font-weight:700;border-bottom:1px solid var(--border)}
+    tbody td{padding:12px;border-bottom:1px solid var(--border);color:#244054}
     .actions{display:flex;gap:12px;align-items:center}
     .btn{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:#f6f9ff;color:var(--accent);font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
     .btn.secondary{background:transparent;color:#3d5061;border:1px solid var(--border)}
-
     .count{color:#334e6c;font-weight:600}
-
-    /* responsive */
-    @media (max-width:900px){
-      .sidebar{display:none}
-      .main{margin-left:0;padding:18px}
-      thead th, tbody td{padding:12px}
-    }
-
-  
-/* animation helper states */
-tbody tr{transition:all 0.4s ease}
-.sidebar, .header, .card{transition:all 0.4s ease}
-</style>
+    /* modal */
+    #createModal{display:none;position:fixed;inset:0;background:rgba(4,10,22,0.45);backdrop-filter:blur(4px);z-index:100;align-items:center;justify-content:center;}
+    #createInner{width:520px;background:#fff;padding:22px;border-radius:10px;box-shadow:0 18px 50px rgba(3,10,30,0.3);transform:translateY(-10px);opacity:0;}
+    #createInner.show{transform:translateY(0);opacity:1;transition:all 320ms cubic-bezier(.2,.8,.2,1)}
+    input, textarea{font-family:inherit;color:#15202b}
+    /* small helpers for animations */
+    tbody tr{transition:all 0.36s ease}
+    .sidebar, .header, .card{transition:all 0.36s ease}
+    @media (max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:18px}}
+  </style>
 </head>
-<script>
-// Simple fade + slide animations for dashboard
-window.addEventListener('DOMContentLoaded',()=>{
-  const card = document.querySelector('.card');
-  const rows = document.querySelectorAll('tbody tr');
-  const sidebar = document.querySelector('.sidebar');
-  const header = document.querySelector('.header');
-
-  // sidebar slide-in
-  sidebar.style.opacity = 0;
-  sidebar.style.transform = 'translateX(-40px)';
-  setTimeout(()=>{
-    sidebar.style.transition = 'all 600ms ease';
-    sidebar.style.opacity = 1;
-    sidebar.style.transform = 'translateX(0)';
-  },100);
-
-  // header fade-down
-  header.style.opacity = 0;
-  header.style.transform = 'translateY(-20px)';
-  setTimeout(()=>{
-    header.style.transition = 'all 600ms ease';
-    header.style.opacity = 1;
-    header.style.transform = 'translateY(0)';
-  },250);
-
-  // card pop-in
-  card.style.opacity = 0;
-  card.style.transform = 'scale(0.95)';
-  setTimeout(()=>{
-    card.style.transition = 'all 600ms ease';
-    card.style.opacity = 1;
-    card.style.transform = 'scale(1)';
-  },380);
-
-  // table rows stagger animation
-  rows.forEach((row, i)=>{
-    row.style.opacity = 0;
-    row.style.transform = 'translateY(12px)';
-    setTimeout(()=>{
-      row.style.transition = 'all 500ms ease';
-      row.style.opacity = 1;
-      row.style.transform = 'translateY(0)';
-    }, 500 + i*120);
-  });
-});
-</script>
 <body>
+
   <aside class="sidebar">
     <div class="brand">
       <div class="logo">EH</div>
-      <div>
-        <h4>Event Horizon</h4>
-      </div>
+      <div><h4>Event Horizon</h4></div>
     </div>
 
     <nav class="nav" aria-label="Main navigation">
-      <a href="#" id="navDashboard" class="active"><span class="icon">🏠</span> Dashboard</a>
-      <a href="#" id="navCreate"><span class="icon">➕</span> Create Event</a>
+      <a id="navDashboard" class="active"><span class="icon">🏠</span> Dashboard</a>
+      <a id="navCreate"><span class="icon">➕</span> Create Event</a>
     </nav>
-    
-    <style>
-    /* Nav active indicator and hover */
-    .nav a{position:relative}
-    .nav a.active{box-shadow:inset 0 0 0 3px rgba(43,102,213,0.06);background:linear-gradient(90deg,rgba(43,102,213,0.06),rgba(43,102,213,0.03));border-left:3px solid var(--accent);padding-left:14px}
-    .nav a .pulse{position:absolute;left:8px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--accent);opacity:0;transform:scale(0.7);animation:pulse 1400ms infinite}
-    @keyframes pulse{0%{opacity:0.9;transform:scale(0.8)}70%{opacity:0.12;transform:scale(2.4)}100%{opacity:0}}
-    .nav a:hover{transform:translateX(4px)}
-    </style>
 
     <div style="margin-top:18px;color:var(--muted);font-size:13px">Version 1.0</div>
   </aside>
@@ -150,164 +70,203 @@ window.addEventListener('DOMContentLoaded',()=>{
         <div class="subtitle">Manage your events and track attendees.</div>
       </div>
       <div style="min-width:220px;display:flex;align-items:center;justify-content:flex-end">
-        <!-- placeholder for avatar / actions -->
         <div style="background:#fff;border-radius:8px;padding:10px 14px;border:1px solid var(--border);min-width:160px;text-align:right;color:var(--muted);font-size:14px">admin@you.com</div>
       </div>
     </div>
 
     <div class="card">
-      <h3>All Events</h3>
-      <p>A list of all created events.</p>
+      <h3 id="cardHeading">All Events</h3>
+      <p id="cardSub">A list of all created events.</p>
 
       <div style="overflow:auto;margin-top:6px">
         <table aria-label="Events table">
           <thead>
             <tr>
               <th style="width:45%">Event Title</th>
-              <th style="width:15%">Date</th>
-              <th style="width:18%">Location</th>
-              <th style="width:7%">Attendees</th>
-              <th style="width:15%">Actions</th>
+              <th style="width:18%">Date</th>
+              <th style="width:20%">Location</th>
+              <th style="width:8%">Attendees</th>
+              <th style="width:12%">Actions</th>
             </tr>
           </thead>
-          <tbody id="eventsTbody">
-            <!-- JS will populate rows -->
-          </tbody>
+          <tbody id="eventsTbody"></tbody>
         </table>
       </div>
     </div>
   </main>
 
-  <script>
-    // sample data (you can replace with fetch from API)
-    const events = [
-      {title:'Next.js Global Summit', date:'10/26/2024', location:'Virtual', attendees:3},
-      {title:'AI in Design Workshop', date:'11/15/2024', location:'San Francisco, CA', attendees:2},
-      {title:'Marketing & Growth Seminar', date:'12/5/2024', location:'New York, NY', attendees:1},
-      {title:'Founder Networking Night', date:'1/20/2025', location:'London, UK', attendees:0}
-    ];
-
-    const tbody = document.getElementById('eventsTbody');
-    events.forEach((ev, idx)=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${ev.title}</td>
-        <td>${ev.date}</td>
-        <td>${ev.location}</td>
-        <td><span class="count">${ev.attendees}</span></td>
-        <td>
-          <div class="actions">
-            <button class="btn" data-idx="${idx}" onclick="viewAttendees(${idx})">👥 View Attendees</button>
-            <button class="btn secondary" onclick="editEvent(${idx})">✏️ Edit</button>
-          </div>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    function viewAttendees(i){
-      const ev = events[i];
-      const list = prompt(`Attendees for "${ev.title}" (names, comma separated):`, 'Alice,Bob,Charlie');
-      if(list!==null){
-        alert('Attendees: ' + list);
-      }
-    }
-    function editEvent(i){
-      const ev = events[i];
-      const newTitle = prompt('Edit event title', ev.title);
-      if(newTitle){
-        ev.title = newTitle; location.reload();
-      }
-    }
-  </script>
+  <!-- Create Modal -->
+  <div id="createModal" aria-hidden="true">
+    <div id="createInner">
+      <h3 style="margin:0 0 8px 0;color:#0b2133">Create New Event</h3>
+      <p style="margin:0 0 16px 0;color:#6b7a89">Fill out the form below to add a new event to the platform.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input id="evTitle" placeholder="Event title e.g., Next.js Conf" style="padding:12px;border-radius:8px;border:1px solid var(--border);">
+        <textarea id="evDesc" placeholder="A brief summary of the event" rows="3" style="padding:12px;border-radius:8px;border:1px solid var(--border);"></textarea>
+        <div style="display:flex;gap:10px">
+          <input id="evDate" type="date" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);">
+          <input id="evLocation" placeholder="Location e.g., Virtual" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--border);">
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input id="evAtt" type="number" min="0" placeholder="Attendees" style="width:140px;padding:12px;border-radius:8px;border:1px solid var(--border);">
+          <div style="flex:1"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
+          <button id="cancelCreate" class="btn secondary">Cancel</button>
+          <button id="submitCreate" class="btn">Create Event</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-// Navigation interactions: animate switching between Dashboard and Create Event
+/* Data and rendering */
+const events = [
+  {title:'Next.js Global Summit', date:'10/26/2024', location:'Virtual', attendees:3},
+  {title:'AI in Design Workshop', date:'11/15/2024', location:'San Francisco, CA', attendees:2},
+  {title:'Marketing & Growth Seminar', date:'12/5/2024', location:'New York, NY', attendees:1},
+  {title:'Founder Networking Night', date:'1/20/2025', location:'London, UK', attendees:0}
+];
+
+const tbody = document.getElementById('eventsTbody');
+
+function renderRows(){
+  tbody.innerHTML = '';
+  events.forEach((ev, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${ev.title}</td>
+      <td>${ev.date}</td>
+      <td>${ev.location}</td>
+      <td><span class="count">${ev.attendees}</span></td>
+      <td>
+        <div class="actions">
+          <button class="btn" data-idx="${idx}" data-action="view">👥 View Attendees</button>
+          <button class="btn secondary" data-idx="${idx}" data-action="edit">✏️ Edit</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+    // entrance animation
+    tr.style.opacity = 0; tr.style.transform = 'translateY(8px)';
+    setTimeout(()=>{ tr.style.transition = 'all 420ms ease'; tr.style.opacity = 1; tr.style.transform = 'translateY(0)'; }, 80 + idx*70);
+  });
+}
+renderRows();
+
+/* Row action delegation */
+tbody.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('button');
+  if(!btn) return;
+  const idx = Number(btn.dataset.idx);
+  const action = btn.dataset.action;
+  if(action === 'view') viewAttendees(idx);
+  if(action === 'edit') editEvent(idx);
+});
+
+function viewAttendees(i){
+  const ev = events[i];
+  const list = prompt(`Attendees for "${ev.title}" (comma separated):`, '');
+  if(list !== null) alert('Attendees: ' + list);
+}
+function editEvent(i){
+  const ev = events[i];
+  const newTitle = prompt('Edit event title', ev.title);
+  if(newTitle){
+    ev.title = newTitle;
+    renderRows();
+  }
+}
+
+/* UI entrance animations for header/card/sidebar */
+window.addEventListener('DOMContentLoaded', ()=>{
+  const sidebar = document.querySelector('.sidebar');
+  const header = document.querySelector('.header');
+  const card = document.querySelector('.card');
+  setTimeout(()=>{ sidebar.style.opacity = 1; sidebar.style.transform = 'translateX(0)'; }, 80);
+  setTimeout(()=>{ header.style.opacity = 1; header.style.transform = 'translateY(0)'; }, 200);
+  setTimeout(()=>{ card.style.opacity = 1; card.style.transform = 'scale(1)'; }, 360);
+});
+
+/* Navigation */
 const navDashboard = document.getElementById('navDashboard');
-const navCreate = document.getElementById('navCreate');
-const main = document.querySelector('.main');
-const card = document.querySelector('.card');
+const navCreate    = document.getElementById('navCreate');
+const cardHeading  = document.getElementById('cardHeading');
+const cardSub      = document.getElementById('cardSub');
 
 function setActiveNav(el){
   document.querySelectorAll('.nav a').forEach(a=>a.classList.remove('active'));
   el.classList.add('active');
-  // add a pulse indicator for a moment
-  let pulse = el.querySelector('.pulse');
-  if(!pulse){ pulse = document.createElement('span'); pulse.className='pulse'; el.appendChild(pulse);} 
 }
 
-function animateContentSwitch(callback){
-  // scale down and fade
-  card.style.transition = 'transform 280ms cubic-bezier(.2,.9,.3,1), opacity 280ms ease';
-  card.style.transform = 'translateY(8px) scale(0.985)';
-  card.style.opacity = '0.6';
-  setTimeout(()=>{
-    // small slide left while invisible
-    card.style.transform = 'translateX(-10px) scale(0.99)';
-    if(callback) callback();
-    // bring back
-    setTimeout(()=>{
-      card.style.transition = 'transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease';
-      card.style.transform = 'translateX(0) translateY(0) scale(1)';
-      card.style.opacity = '1';
-      // little attention animation on title
-      const title = document.querySelector('.title');
-      title.animate([
-        { transform: 'translateY(-6px)', opacity: 0.9 },
-        { transform: 'translateY(0)', opacity: 1 }
-      ], { duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)' });
-    }, 260);
-  }, 260);
+navDashboard.addEventListener('click', (e)=>{
+  e.preventDefault();
+  setActiveNav(navDashboard);
+  cardHeading.textContent = 'All Events';
+  cardSub.textContent = 'A list of all created events.';
+  renderRows();
+});
+
+navCreate.addEventListener('click', (e)=>{
+  e.preventDefault();
+  setActiveNav(navCreate);
+  openCreateModal();
+});
+
+/* Modal logic */
+const createModal = document.getElementById('createModal');
+const createInner = document.getElementById('createInner');
+const cancelCreate = document.getElementById('cancelCreate');
+const submitCreate = document.getElementById('submitCreate');
+
+function openCreateModal(){
+  createModal.style.display = 'flex';
+  setTimeout(()=> createInner.classList.add('show'), 20);
 }
+function closeCreateModal(){
+  createInner.classList.remove('show');
+  setTimeout(()=> createModal.style.display = 'none', 260);
+}
+cancelCreate.addEventListener('click', (e)=> { e.preventDefault(); closeCreateModal(); });
 
-navDashboard.addEventListener('click',(e)=>{e.preventDefault(); setActiveNav(navDashboard); animateContentSwitch(()=>{
-  // Restore original Dashboard content
-  const cardInner = document.querySelector('.card');
-  cardInner.querySelector('h3').textContent = 'All Events';
-  cardInner.querySelector('p').textContent = 'A list of all created events.';
+/* create-submission */
+submitCreate.addEventListener('click', (e)=>{
+  e.preventDefault();
+  const title = document.getElementById('evTitle').value.trim();
+  const desc = document.getElementById('evDesc').value.trim();
+  const dateVal = document.getElementById('evDate').value;
+  const location = document.getElementById('evLocation').value.trim() || 'TBD';
+  const attendees = parseInt(document.getElementById('evAtt').value || '0', 10);
 
-  // Remove create-event form if exists
-  const formPlaceholder = document.getElementById('createFormPlaceholder');
-  if(formPlaceholder){ formPlaceholder.remove(); }
+  if(!title || !dateVal){
+    const el = !title ? document.getElementById('evTitle') : document.getElementById('evDate');
+    el.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}],{duration:260});
+    el.focus();
+    return;
+  }
 
-  // Restore table visibility
-  const tbody = document.getElementById('eventsTbody');
-  tbody.style.opacity = '1';
-});});('click',(e)=>{e.preventDefault(); setActiveNav(navDashboard); animateContentSwitch(()=>{
-  // ensure dashboard content is shown (we only have one view now)
-  // if you have a separate create-event panel, toggle visibility here
-});});
+  // format date for display
+  const prettyDate = new Date(dateVal).toLocaleDateString();
+  const newEv = { title, date: prettyDate, location, attendees };
+  events.unshift(newEv);
+  renderRows();
 
-navCreate.addEventListener('click',(e)=>{e.preventDefault(); setActiveNav(navCreate); animateContentSwitch(()=>{
-  // demo: show a quick placeholder create-event state inside the card
-  const cardInner = document.querySelector('.card');
-  cardInner.querySelector('h3').textContent = 'Create Event';
-  cardInner.querySelector('p').textContent = 'Quick form to create a new event.';
-  const tbody = document.getElementById('eventsTbody');
-  // fade out table while in create mode
-  tbody.style.transition='opacity 300ms'; tbody.style.opacity='0.08';
-  // replace content with simple form after short delay
-  setTimeout(()=>{
-    const formHtml = `
-      <div style="margin-top:10px">
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input placeholder="Event title" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:#223;">
-          <input placeholder="Date" style="width:120px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:#223;">
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <input placeholder="Location" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:#223;">
-          <input placeholder="Attendees" style="width:120px;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:#223;">
-        </div>
-        <div style="text-align:right"><button class=\"btn\">Create</button></div>
-      </div>
-    `;
-    // insert form under card header
-    if(!document.getElementById('createFormPlaceholder')){
-      const wrapper = document.createElement('div'); wrapper.id='createFormPlaceholder'; wrapper.innerHTML = formHtml;
-      document.querySelector('.card').appendChild(wrapper);
-    }
-  }, 340);
-});});
+  // small success micro-animation
+  document.querySelector('.card').animate([{transform:'scale(.995)'},{transform:'scale(1)'}], {duration:260});
+  closeCreateModal();
+
+  // return to dashboard visual state
+  setActiveNav(navDashboard);
+  cardHeading.textContent = 'All Events';
+  cardSub.textContent = 'A list of all created events.';
+});
+
+/* close modal on ESC or click outside */
+createModal.addEventListener('click', (e)=>{
+  if(e.target === createModal) closeCreateModal();
+});
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeCreateModal(); });
+
 </script>
 </body>
 </html>
