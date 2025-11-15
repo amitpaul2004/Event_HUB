@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>All Events — Event Horizon (with Delete)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e9f0fb; --card:#fff; --muted:#6b7a89; --accent:#2563eb; --border:#e1e8f5; --text:#082032;
+  }
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+  .container{max-width:1100px;margin:28px auto;padding:0 18px}
+  .heading{text-align:center;margin-bottom:18px}
+  .heading h1{font-size:36px;margin:0}
+  .heading p{color:var(--muted);margin-top:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:18px}
+  .card{background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:0 8px 26px rgba(10,30,60,0.04);transition:transform .28s ease,opacity .28s ease}
+  .card.removing{opacity:0; transform:translateY(12px) scale(.98); transition:transform .36s ease, opacity .36s ease;}
+  .card .media{height:140px;background-size:cover;background-position:center}
+  .card .body{padding:12px}
+  .card h4{margin:0 0 8px 0;font-size:16px}
+  .meta{display:flex;gap:12px;color:var(--muted);font-size:13px;margin-bottom:10px;align-items:center}
+  .card .cta{padding:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .view-btn{background:linear-gradient(90deg,var(--accent),#7c9df0);color:white;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+  .delete-btn{background:transparent;border:1px solid #f2c1c1;color:#c02828;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700}
+  .small-muted{font-size:13px;color:var(--muted)}
+  @media (max-width:640px){ .media{height:120px} }
+
+  /* small fade-in for new cards */
+  .card.entering{opacity:0; transform:translateY(8px);}
+  .card.entering.show{opacity:1; transform:none; transition:all .42s cubic-bezier(.2,.8,.2,1);}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="heading">
+      <h1>All Events</h1>
+      <p>Browse our full catalog of professional events and seminars.</p>
+    </div>
+
+    <div style="text-align:center;margin-bottom:12px">
+      <a href="dashboard.html" style="text-decoration:none">
+    </div>
+
+    <div id="eventsGrid" class="grid" aria-live="polite"></div>
+  </div>
+
+<script>
+
+/* ---------- Auth helpers (client-side demo) ---------- */
+function isAuthenticated() {
+  // Use your real auth-check here (cookie, JWT, etc.)
+  // For demo we use localStorage key 'eh_auth' === '1'
+  try { return localStorage.getItem('eh_auth') === '1'; }
+  catch(e) { return false; }
+}
+
+function requireLoginAndRemember(actionName, payload) {
+  // Save pending action (so we can run after login)
+  sessionStorage.setItem('eh_pending_action', actionName);
+  sessionStorage.setItem('eh_pending_payload', JSON.stringify(payload || {}));
+  // Send to login page
+  window.location.href = 'login.html';
+}
+
+/* Run any pending action if user is authenticated and pending action exists */
+function runPendingActionIfAny() {
+  if(!isAuthenticated()) return;
+  const act = sessionStorage.getItem('eh_pending_action');
+  const raw = sessionStorage.getItem('eh_pending_payload');
+  if(!act) return;
+  try {
+    const payload = raw ? JSON.parse(raw) : {};
+    if(act === 'delete') {
+      const id = payload.id;
+      if(id) deleteEventById(id, /*btnEl=*/null, /*silent=*/false);
+    }
+    // clear pending
+    sessionStorage.removeItem('eh_pending_action');
+    sessionStorage.removeItem('eh_pending_payload');
+  } catch(e){
+    console.error('pending action failed', e);
+    sessionStorage.removeItem('eh_pending_action');
+    sessionStorage.removeItem('eh_pending_payload');
+  }
+}
+
+/* LocalStorage key */
+const EVENTS_KEY = 'eh_events';
+
+/* Default events shown when no stored events exist */
+const defaultEvents = [
+  { id:'def1', title:'Next.js Global Summit', date:'10/26/2024', location:'Virtual', image:'https://images.unsplash.com/photo-1485217988980-11786ced9454?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800' },
+  { id:'def2', title:'AI in Design Workshop', date:'11/15/2024', location:'San Francisco, CA', image:'https://images.unsplash.com/photo-1551836022-d5d88e9218df?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800' },
+  { id:'def3', title:'Marketing & Growth Seminar', date:'12/05/2024', location:'New York, NY', image:'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800' },
+  { id:'def4', title:'Founder Networking Night', date:'01/20/2025', location:'London, UK', image:'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800' }
+];
+
+/* Utilities to read/write storage */
+function loadStoredEvents(){
+  try{
+    const raw = localStorage.getItem(EVENTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Failed to read events', e);
+    return [];
+  }
+}
+function saveStoredEvents(arr){
+  localStorage.setItem(EVENTS_KEY, JSON.stringify(arr));
+}
+
+/* Render all cards (stored first then defaults) */
+function renderCards(){
+  const grid = document.getElementById('eventsGrid');
+  grid.innerHTML = '';
+
+  const stored = loadStoredEvents();
+  const items = stored.length ? stored.concat(defaultEvents) : defaultEvents;
+
+  items.forEach(ev => {
+    const img = ev.image && ev.image.length ? ev.image : 'https://images.unsplash.com/photo-1557804506-669a67965ba0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800';
+    const card = document.createElement('article');
+    card.className = 'card entering';
+    card.dataset.evId = ev.id || '';
+    card.innerHTML = `
+      <div class="media" style="background-image:url('${escapeHtml(img)}')"></div>
+      <div class="body">
+        <h4>${escapeHtml(ev.title)}</h4>
+        <div class="meta">
+          <div title="Date">📅 <span class="small-muted">${escapeHtml(ev.date)}</span></div>
+          <div>•</div>
+          <div title="Location" class="small-muted">${escapeHtml(ev.location || 'TBD')}</div>
+        </div>
+      </div>
+      <div class="cta">
+        <div class="small-muted">${ev.attendees ? `${ev.attendees} attending` : ''}</div>
+        <div>
+          <button class="view-btn" onclick="viewDetails('${escapeJs(ev.id)}')">View Details ➜</button>
+          <button class="delete-btn" onclick="confirmDelete('${escapeJs(ev.id)}', this)">Delete</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+
+    // entering animation
+    requestAnimationFrame(()=> {
+      setTimeout(()=> card.classList.add('show'), 40);
+      setTimeout(()=> card.classList.remove('entering','show'), 600);
+    });
+  });
+}
+
+/* Called by Create Event flow to ensure page updates (if user stayed) */
+function refreshAfterCreate(){
+  renderCards();
+}
+
+/* View details helper (same as before) */
+function viewDetails(id){
+  if(!id){
+    // For default events without id, just show title in an alert (optional)
+    alert('No detailed view for this item.');
+    return;
+  }
+  localStorage.setItem('eh_selected_event', id);
+  window.location.href = 'event-details.html';
+}
+
+/* Delete — confirm, animate, then remove from storage + DOM */
+function confirmDelete(id, btnEl) {
+  // If user is not authenticated, save pending delete and go to login
+  if(!isAuthenticated()) {
+    // remember this exact delete action and redirect to login
+    requireLoginAndRemember('delete', { id });
+    return;
+  }
+
+  // If authenticated, continue with confirmation
+  if(!id) {
+    if(!confirm('This is a default event — remove it from view?')) return;
+    const card = btnEl.closest('.card'); if(card) animateRemoval(card);
+    return;
+  }
+
+  if(!confirm('Delete this event? At First you may be login.')) return;
+  deleteEventById(id, btnEl);
+}
+
+
+function deleteEventById(id, btnEl, silent = false) {
+  const arr = loadStoredEvents();
+  const idx = arr.findIndex(e => e.id === id);
+  if(idx === -1) {
+    // remove DOM card if present
+    if(btnEl){
+      const card = btnEl.closest('.card');
+      if(card) animateRemoval(card);
+    } else {
+      // find card by data attribute
+      const card = document.querySelector(`.card[data-ev-id="${id}"]`);
+      if(card) animateRemoval(card);
+    }
+    if(!silent) { console.warn('Event id not found in storage'); }
+    return;
+  }
+
+  arr.splice(idx,1);
+  saveStoredEvents(arr);
+
+  // animate DOM removal
+  const card = btnEl ? btnEl.closest('.card') : document.querySelector(`.card[data-ev-id="${id}"]`);
+  if(card) animateRemoval(card);
+}
+ 
+document.addEventListener('DOMContentLoaded', function(){
+  renderCards();      // your existing render
+  runPendingActionIfAny(); // runs a pending delete if present and authenticated
+});
+
+
+/* animation for removing a card element */
+function animateRemoval(cardEl){
+  cardEl.classList.add('removing');
+  // after transition, remove from DOM
+  setTimeout(()=> {
+    if(cardEl.parentNode) cardEl.parentNode.removeChild(cardEl);
+  }, 380);
+}
+
+/* small helpers */
+function escapeHtml(s){ return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* escape JS string used in onclick inline attribute */
+function escapeJs(s){ return String(s || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
+
+/* Initialize */
+document.addEventListener('DOMContentLoaded', renderCards);
+</script>
+</body>
+</html>

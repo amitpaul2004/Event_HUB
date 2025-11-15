@@ -427,6 +427,78 @@ function showRecommendations(){
   `;
 }
 
+const EVENTS_KEY = 'eh_events';
+
+/* Read events array from storage (or return []) */
+function loadStoredEvents(){
+  try{
+    const raw = localStorage.getItem(EVENTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){
+    console.error('Failed to read events', e);
+    return [];
+  }
+}
+
+/* Save events array back to storage */
+function saveStoredEvents(arr){
+  localStorage.setItem(EVENTS_KEY, JSON.stringify(arr));
+}
+
+/* Call this when user submits the Create Event form.
+   It expects form fields with IDs: evTitle, evDesc, evDate, evLocation, evImage (optional), evAtt */
+function createEventFromForm(redirectToEvents = true){
+  const title = (document.getElementById('evTitle') || {}).value || '';
+  const desc  = (document.getElementById('evDesc') || {}).value || '';
+  const date  = (document.getElementById('evDate') || {}).value || '';
+  const location = (document.getElementById('evLocation') || {}).value || '';
+  const image = (document.getElementById('evImage') || {}).value || ''; // optional URL input
+  const attendees = parseInt((document.getElementById('evAtt') || {}).value || '0', 10) || 0;
+
+  if(!title || !date){
+    // simple validation - adapt to your UI
+    alert('Please fill required fields: title and date');
+    return false;
+  }
+
+  const prettyDate = new Date(date).toLocaleDateString();
+
+  // event object shape (you can extend fields)
+  const newEvent = {
+    id: 'ev_' + Date.now(),
+    title,
+    description: desc,
+    date: prettyDate,
+    isoDate: date,        // keep iso date if needed for sorting
+    location,
+    image: image || '',   // optional; events.html will show fallback image if empty
+    attendees: attendees
+  };
+
+  // save to localStorage (add to start so newest appear first)
+  const arr = loadStoredEvents();
+  arr.unshift(newEvent);
+  saveStoredEvents(arr);
+
+  // if you want to close a modal instead of redirecting, do that here.
+  // example: closeModal();
+
+  if(redirectToEvents){
+    // navigate to All Events page
+    window.location.href = 'events.html';
+  }
+
+  return true;
+}
+
+/* Example: if your Create button is <button id="submitCreate">, attach handler */
+const submitBtn = document.getElementById('submitCreate');
+if(submitBtn){
+  submitBtn.addEventListener('click', function(e){
+    e.preventDefault();
+    createEventFromForm(true); // save + go to events page
+  });
+}
 
 </script>
 </body>
