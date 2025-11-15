@@ -1,4 +1,6 @@
-# TO run this server, use the command:   {    python server.py      }
+# TO run this server, use the command:   1.    {  pip install Flask google-generativeai python-dotenv   }    run in your terminal
+#                                        2.    {   cd Frontend            }
+#                                        3.    {    python server.py      }
 
 import os
 import google.generativeai as genai
