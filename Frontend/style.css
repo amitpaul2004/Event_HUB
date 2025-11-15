@@ -203,7 +203,8 @@ a {
     overflow: hidden; /* Ensures blur doesn't bleed out if content overflows */
     
     /* Background Image for the features section */
-    background-image: url('../Frontend/img/images.jpg'); /* Replace with your desired image */
+    background-image: url('https://images.unsplash.com/photo-1485217988980-11786ced9454?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400');
+ /* Replace with your desired image */
     background-size: cover;
     background-position: center;
 }
