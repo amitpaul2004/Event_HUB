@@ -12,6 +12,17 @@ It includes complete event listings, attendee registrations, admin dashboard, an
 
 ---
 
+## Overview:
+<img width="1896" height="861" alt="image" src="https://github.com/user-attachments/assets/88acb736-a0a1-4890-9ca5-6d5eab3f8af6" />
+
+---
+
+## Demo Vedio :
+https://screenapp.io/app/v/cs2qhILKs8
+
+
+---
+
 ## ⭐ Key Features
 - ✔ Add, edit, update, and delete events  
 - ✔ User event registration  
@@ -86,3 +97,33 @@ C:\xampp\htdocs\
 4. Go to **Import**  
 5. Choose:
 Event_HUB/database/event_hub.sql
+
+Done! Database is ready.
+
+---
+
+## 4️⃣ Configure Database (Important)
+
+Open:
+
+config.php
+
+Put this code:
+
+```php
+<?php
+$host = "localhost";
+$user = "root";
+$pass = "";
+$db   = "event_hub";
+
+$conn = mysqli_connect($host, $user, $pass, $db);
+
+if (!$conn) {
+    die("Connection failed: " . mysqli_connect_error());
+}
+?>
+```
+
+## Run the Project
+http://localhost/Event_HUB/
