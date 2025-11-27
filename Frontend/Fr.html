@@ -369,57 +369,62 @@
 
       <h2 id="modalTitle" class="modal-title">Register for This Event</h2>
 
-      <form id="regForm" novalidate>
-        <div class="row">
-          <label>
-            <span class="lbl">Name *</span>
-            <input id="name" name="name" type="text" required />
-          </label>
+      <form id="regForm" action="../Backend/add_attendee.php" method="POST" novalidate>
 
-          <label>
-            <span class="lbl">Email *</span>
-            <input id="email" name="email" type="email" required />
-          </label>
-        </div>
+    <!-- Hidden event ID (required for backend) -->
+    <input type="hidden" name="event_id" value="1">
 
-        <div class="row">
-          <label>
-            <span class="lbl">Department *</span>
-            <input id="department" name="department" type="text" required />
-          </label>
+    <div class="row">
+      <label>
+        <span class="lbl">Name *</span>
+        <input id="name" name="name" type="text" required />
+      </label>
 
-          <label>
-            <span class="lbl">University Roll No. *</span>
-            <input id="roll" name="roll" type="text" required />
-          </label>
-        </div>
+      <label>
+        <span class="lbl">Email *</span>
+        <input id="email" name="email" type="email" required />
+      </label>
+    </div>
 
-        <div class="row">
-          <label>
-            <span class="lbl">Phone *</span>
-            <input id="phone" name="phone" type="tel" inputmode="tel" pattern="\d{6,15}" required />
-          </label>
+    <div class="row">
+      <label>
+        <span class="lbl">Department *</span>
+        <input id="department" name="department" type="text" required />
+      </label>
 
-          <label>
-            <span class="lbl">Food Preference</span>
-            <select id="food" name="food">
-              <option>No preference</option>
-              <option>Vegetarian</option>
-              <option>Vegan</option>
-              <option>Halal</option>
-              <option>Other</option>
-            </select>
-          </label>
-        </div>
+      <label>
+        <span class="lbl">University Roll No. *</span>
+        <input id="roll" name="roll" type="text" required />
+      </label>
+    </div>
 
-        <div class="actions">
-          <button type="button" id="cancelBtn" class="btn-ghost">Cancel</button>
-          <button type="submit" id="submitBtn" class="btn-primary">
-            <span class="btn-text">Submit</span>
-            <span class="btn-spinner" aria-hidden="true"></span>
-          </button>
-        </div>
-      </form>
+    <div class="row">
+      <label>
+        <span class="lbl">Phone *</span>
+        <input id="phone" name="phone" type="tel" inputmode="tel" pattern="\d{6,15}" required />
+      </label>
+
+      <label>
+        <span class="lbl">Food Preference</span>
+        <select id="food" name="food">
+          <option>No preference</option>
+          <option>Vegetarian</option>
+          <option>Vegan</option>
+          <option>Halal</option>
+          <option>Other</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="actions">
+      <button type="button" id="cancelBtn" class="btn-ghost">Cancel</button>
+      <button type="submit" id="submitBtn" class="btn-primary">
+        <span class="btn-text">Submit</span>
+        <span class="btn-spinner" aria-hidden="true"></span>
+      </button>
+    </div>
+
+</form>
 
       <div id="successPanel" class="success-panel" aria-hidden="true" style="display:none;">
         <svg class="checkmark" viewBox="0 0 52 52" aria-hidden="true">
@@ -475,7 +480,6 @@
     if (header) header.classList.add('visible');
     if (hero) hero.classList.add('show');
 
-    // Reveal all sections (simple, no IntersectionObserver)
     document.querySelectorAll('.about, .schedule-title, .card, .event, .speakers-section, .speaker-card')
       .forEach(el => el.classList.add('visible'));
   });
@@ -625,48 +629,20 @@
     });
   }
 
-  function playSuccessAnimation() {
-    if (!form || !successPanel) return;
-    form.style.transition = 'opacity 260ms ease, transform 360ms cubic-bezier(.2,.9,.3,1)';
-    form.style.opacity = '0';
-    form.style.transform = 'scale(0.98) translateY(-6px)';
-
-    setTimeout(() => {
-      form.style.display = 'none';
-      successPanel.style.display = 'block';
-      successPanel.classList.add('active');
-      if (!reduced) startConfetti();
-      setTimeout(() => {
-        closeModal();
-      }, 1800);
-    }, 260);
-  }
-
+  /* FORM SUBMIT (real submission) */
   if (form) {
     form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const values = getValues();
-      const errs = validate(values);
-      if (Object.keys(errs).length) {
-        showErrors(errs);
-        return;
-      }
-      const submitBtn = document.getElementById('submitBtn');
-      const spinner = submitBtn?.querySelector('.btn-spinner');
-      if (submitBtn && spinner) {
-        submitBtn.disabled = true;
-        spinner.style.display = 'inline-block';
-      }
 
-      setTimeout(() => {
-        if (submitBtn && spinner) {
-          submitBtn.disabled = false;
-          spinner.style.display = 'none';
+        const values = getValues();
+        const errs = validate(values);
+
+        if (Object.keys(errs).length) {
+            e.preventDefault();
+            showErrors(errs);
+            return;
         }
-        playSuccessAnimation();
-      }, 700);
     });
-  }
+}
 
   function resizeCanvas() {
     if (!confettiCanvas || !modal) return;
@@ -674,7 +650,6 @@
     confettiCanvas.height = modal.clientHeight;
     confettiCtx = confettiCanvas.getContext('2d');
   }
-  window.addEventListener('resize', resizeCanvas);
 
   function startConfetti() {
     if (!confettiCanvas || !confettiCtx) return;
@@ -722,7 +697,13 @@
   }
 
 })();
+
+/* ✅ SUCCESS POPUP INSERTED HERE */
+if (window.location.search.includes("success=1")) {
+    alert("Registration successful!");
+}
 </script>
+
 
 </body>
 </html>

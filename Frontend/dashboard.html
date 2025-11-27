@@ -101,14 +101,14 @@
       <h3 style="margin:0 0 8px 0;color:#0b2133">Create New Event</h3>
       <p style="margin:0 0 16px 0;color:#6b7a89">Fill out the form below to add a new event to the platform.</p>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <input id="evTitle" placeholder="Event title e.g., Next.js Conf" style="padding:12px;border-radius:8px;border:1px solid var(--border);">
-        <textarea id="evDesc" placeholder="A brief summary of the event" rows="3" style="padding:12px;border-radius:8px;border:1px solid var(--border);"></textarea>
+        <input id="evTitle" name="evTitle" placeholder="Event title e.g., Next.js Conf" style="padding:12px;border-radius:8px;border:1px solid var(--border);">
+        <textarea id="evDesc" name="evDesc" placeholder="A brief summary of the event" rows="3" style="padding:12px;border-radius:8px;border:1px solid var(--border);"></textarea>
         <div style="display:flex;gap:10px">
-          <input id="evDate" type="date" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);">
-          <input id="evLocation" placeholder="Location e.g., Virtual" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--border);">
+          <input id="evDate" name="evDate" type="date" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);">
+          <input id="evLocation" name="evLocation" placeholder="Location e.g., Virtual" style="flex:1;padding:12px;border-radius:8px;border:1px solid var(--border);">
         </div>
         <div style="display:flex;gap:10px;align-items:center">
-          <input id="evAtt" type="number" min="0" placeholder="Attendees" style="width:140px;padding:12px;border-radius:8px;border:1px solid var(--border);">
+          <input id="evAtt" name="evAtt" type="number" min="0" placeholder="Attendees" style="width:140px;padding:12px;border-radius:8px;border:1px solid var(--border);">
           <div style="flex:1"></div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
@@ -118,7 +118,35 @@
       </div>
     </div>
   </div>
-  
+  <!-- EDIT EVENT MODAL -->
+<div id="editModal" style="
+    display:none; position:fixed; inset:0; 
+    background:rgba(0,0,0,0.45); backdrop-filter:blur(4px);
+    z-index:200; align-items:center; justify-content:center;
+">
+  <div id="editInner" style="
+      width:520px; background:white; padding:22px; 
+      border-radius:10px; box-shadow:0 18px 50px rgba(0,0,0,0.3);
+  ">
+    <h3>Edit Event</h3>
+    <input id="editId" type="hidden">
+
+    <input id="editTitle" placeholder="Event Title" style="margin-top:12px;padding:12px;width:100%;">
+    <textarea id="editDesc" placeholder="Description" rows="3" style="margin-top:10px;padding:12px;width:100%;"></textarea>
+
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <input id="editDate" type="date" style="flex:1;padding:10px;">
+      <input id="editLocation" placeholder="Location" style="flex:1;padding:12px;">
+    </div>
+
+    <input id="editAtt" type="number" min="0" placeholder="Attendees" style="margin-top:10px;padding:12px;width:150px;">
+
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+      <button onclick="closeEditModal()" class="btn secondary">Cancel</button>
+      <button onclick="saveEdit()" class="btn">Save</button>
+    </div>
+  </div>
+</div>
 
   <!-- Attendees Popup Modal -->
 <div id="attPopup" style="
@@ -200,44 +228,83 @@
 
 
 <script>
-/* Data and rendering */
-const events = [
-  {title:'Next.js Global Summit', date:'10/26/2024', location:'Virtual', attendees:3},
-  {title:'AI in Design Workshop', date:'11/15/2024', location:'San Francisco, CA', attendees:2},
-  {title:'Marketing & Growth Seminar', date:'12/5/2024', location:'New York, NY', attendees:1},
-  {title:'Founder Networking Night', date:'1/20/2025', location:'London, UK', attendees:0}
-];
+/* ----------------------
+   REPLACED: removed static sample events
+   Now events are loaded from backend via get_events.php
+   ---------------------- */
 
+let events = [];                // will be filled by loadEvents()
 const tbody = document.getElementById('eventsTbody');
 
+/* Render rows (keeps your animation behaviour) */
 function renderRows(){
   tbody.innerHTML = '';
   events.forEach((ev, idx) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${ev.title}</td>
-      <td>${ev.date}</td>
-      <td>${ev.location}</td>
-      <td><span class="count">${ev.attendees}</span></td>
-      <td>
-        <div class="actions">
-          <button class="btn" onclick="openAttendees('Next.js Global Summit')">
-  👥 View Attendees
-</button>
 
-          <button class="btn secondary" data-idx="${idx}" data-action="edit">✏️ Edit</button>
-        </div>
-      </td>
+    // try to format date nicely for display (if ISO yyyy-mm-dd)
+    let displayDate = ev.event_date || ev.date || '';
+    try {
+      if (displayDate && displayDate.indexOf('-') !== -1) {
+        const d = new Date(displayDate + 'T00:00:00');
+        displayDate = d.toLocaleDateString();
+      }
+    } catch(e){ /* keep raw if parse fails */ }
+
+    tr.innerHTML = `
+      <td>${escapeHtml(ev.title)}</td>
+      <td>${escapeHtml(displayDate)}</td>
+      <td>${escapeHtml(ev.location || '')}</td>
+      <td><span class="count">${escapeHtml(String(ev.attendees || 0))}</span></td>
+      <td>
+  <div class="actions">
+    <button class="btn" onclick="openAttendees('${ev.title}', ${ev.id})">👥 View</button>
+    <button class="btn secondary" onclick="openEdit(${ev.id}, '${ev.title}', '${ev.description}', '${ev.event_date}', '${ev.location}', ${ev.attendees})">✏️ Edit</button>
+    <button class="btn" style="background:#ffdddd;color:#c0392b" onclick="deleteEventById(${ev.id})">🗑 Delete</button>
+  </div>
+</td>
     `;
     tbody.appendChild(tr);
+
     // entrance animation
     tr.style.opacity = 0; tr.style.transform = 'translateY(8px)';
     setTimeout(()=>{ tr.style.transition = 'all 420ms ease'; tr.style.opacity = 1; tr.style.transform = 'translateY(0)'; }, 80 + idx*70);
   });
 }
-renderRows();
 
-/* Row action delegation */
+/* Escape helpers to avoid injection when inserting into DOM */
+function escapeHtml(s){
+  if(!s) return '';
+  return String(s).replace(/[&<>"']/g, function(m){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]; });
+}
+function escapeJs(s){
+  if(!s) return '';
+  return String(s).replace(/'/g,"\\'").replace(/"/g,'\\"');
+}
+
+/* ----------------------
+   Load events from backend
+   ---------------------- */
+function loadEvents(){
+  fetch("../Backend/get_events.php")
+    .then(r => r.json())
+    .then(data => {
+      if(Array.isArray(data)) {
+        events = data;
+      } else {
+        events = [];
+      }
+      renderRows();
+    })
+    .catch(err => {
+      console.error('Failed to load events', err);
+      events = [];
+      renderRows();
+    });
+}
+loadEvents();
+
+/* Row action delegation (keeps your original edit behavior) */
 tbody.addEventListener('click', (ev) => {
   const btn = ev.target.closest('button');
   if(!btn) return;
@@ -247,6 +314,7 @@ tbody.addEventListener('click', (ev) => {
   if(action === 'edit') editEvent(idx);
 });
 
+/* Your original view/edit functions remain — they now work on backend-loaded events */
 function viewAttendees(i){
   const ev = events[i];
   const list = prompt(`Attendees for "${ev.title}" (comma separated):`, '');
@@ -256,12 +324,13 @@ function editEvent(i){
   const ev = events[i];
   const newTitle = prompt('Edit event title', ev.title);
   if(newTitle){
+    // local edit only — if you want server-side edit, we can add it later
     ev.title = newTitle;
     renderRows();
   }
 }
 
-/* UI entrance animations for header/card/sidebar */
+/* UI entrance animations for header/card/sidebar (unchanged) */
 window.addEventListener('DOMContentLoaded', ()=>{
   const sidebar = document.querySelector('.sidebar');
   const header = document.querySelector('.header');
@@ -271,7 +340,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   setTimeout(()=>{ card.style.opacity = 1; card.style.transform = 'scale(1)'; }, 360);
 });
 
-/* Navigation */
+/* Navigation (unchanged) */
 const navDashboard = document.getElementById('navDashboard');
 const navCreate    = document.getElementById('navCreate');
 const cardHeading  = document.getElementById('cardHeading');
@@ -287,7 +356,7 @@ navDashboard.addEventListener('click', (e)=>{
   setActiveNav(navDashboard);
   cardHeading.textContent = 'All Events';
   cardSub.textContent = 'A list of all created events.';
-  renderRows();
+  loadEvents();
 });
 
 navCreate.addEventListener('click', (e)=>{
@@ -296,7 +365,7 @@ navCreate.addEventListener('click', (e)=>{
   openCreateModal();
 });
 
-/* Modal logic */
+/* Modal logic (unchanged) */
 const createModal = document.getElementById('createModal');
 const createInner = document.getElementById('createInner');
 const cancelCreate = document.getElementById('cancelCreate');
@@ -312,7 +381,9 @@ function closeCreateModal(){
 }
 cancelCreate.addEventListener('click', (e)=> { e.preventDefault(); closeCreateModal(); });
 
-/* create-submission */
+/* ----------------------
+   CREATE-SUBMISSION -> send to backend add_event.php
+   ---------------------- */
 submitCreate.addEventListener('click', (e)=>{
   e.preventDefault();
   const title = document.getElementById('evTitle').value.trim();
@@ -328,20 +399,34 @@ submitCreate.addEventListener('click', (e)=>{
     return;
   }
 
-  // format date for display
-  const prettyDate = new Date(dateVal).toLocaleDateString();
-  const newEv = { title, date: prettyDate, location, attendees };
-  events.unshift(newEv);
-  renderRows();
+  // POST to backend
+  const fd = new FormData();
+  fd.append("title", title);
+  fd.append("description", desc);
+  fd.append("event_date", dateVal);
+  fd.append("location", location);
+  fd.append("attendees", attendees);
 
-  // small success micro-animation
-  document.querySelector('.card').animate([{transform:'scale(.995)'},{transform:'scale(1)'}], {duration:260});
-  closeCreateModal();
-
-  // return to dashboard visual state
-  setActiveNav(navDashboard);
-  cardHeading.textContent = 'All Events';
-  cardSub.textContent = 'A list of all created events.';
+  fetch("../Backend/add_event.php", {
+    method: "POST",
+    body: fd
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data && data.status === "success"){
+      // success animation + refresh
+      document.querySelector('.card').animate([{transform:'scale(.995)'},{transform:'scale(1)'}], {duration:260});
+      closeCreateModal();
+      // reload events list from server
+      loadEvents();
+    } else {
+      alert("Failed to create event. Server returned error.");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Server error while creating event.");
+  });
 });
 
 /* close modal on ESC or click outside */
@@ -350,7 +435,7 @@ createModal.addEventListener('click', (e)=>{
 });
 document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeCreateModal(); });
 
-// SAMPLE ATTENDEES DATA  (You can replace with your real data)
+/* SAMPLE ATTENDEES DATA (kept for popup demo) */
 const attendeesData = {
   "Next.js Global Summit": [
     {name:"Alice Johnson", email:"alice@example.com", company:"TechCorp", minutes:240, questions:5, rating:5},
@@ -359,8 +444,7 @@ const attendeesData = {
   ]
 };
 
-
-// 🎉 OPEN ATTENDEES POPUP
+// 🎉 OPEN ATTENDEES POPUP (keeps using attendeesData)
 function openAttendees(eventName){
   const popup = document.getElementById("attPopup");
   const box = document.getElementById("attBox");
@@ -400,8 +484,6 @@ function openAttendees(eventName){
   }, 10);
 }
 
-
-// ❌ CLOSE POPUP
 function closeAttendees(){
   const popup = document.getElementById("attPopup");
   const box = document.getElementById("attBox");
@@ -412,8 +494,6 @@ function closeAttendees(){
   setTimeout(() => popup.style.display = "none", 250);
 }
 
-
-// ⭐ SHOW RECOMMENDATIONS
 function showRecommendations(){
   const rec = document.getElementById("recBox");
   rec.style.display = "block";
@@ -427,9 +507,9 @@ function showRecommendations(){
   `;
 }
 
+/* The following localStorage helpers are left in place but are now unused by create flow.
+   They can be removed if you prefer server-only storage. */
 const EVENTS_KEY = 'eh_events';
-
-/* Read events array from storage (or return []) */
 function loadStoredEvents(){
   try{
     const raw = localStorage.getItem(EVENTS_KEY);
@@ -439,66 +519,149 @@ function loadStoredEvents(){
     return [];
   }
 }
-
-/* Save events array back to storage */
 function saveStoredEvents(arr){
   localStorage.setItem(EVENTS_KEY, JSON.stringify(arr));
 }
 
-/* Call this when user submits the Create Event form.
-   It expects form fields with IDs: evTitle, evDesc, evDate, evLocation, evImage (optional), evAtt */
+/* Legacy function (kept in case you used it elsewhere) now delegates to server */
 function createEventFromForm(redirectToEvents = true){
   const title = (document.getElementById('evTitle') || {}).value || '';
   const desc  = (document.getElementById('evDesc') || {}).value || '';
   const date  = (document.getElementById('evDate') || {}).value || '';
   const location = (document.getElementById('evLocation') || {}).value || '';
-  const image = (document.getElementById('evImage') || {}).value || ''; // optional URL input
   const attendees = parseInt((document.getElementById('evAtt') || {}).value || '0', 10) || 0;
 
   if(!title || !date){
-    // simple validation - adapt to your UI
     alert('Please fill required fields: title and date');
     return false;
   }
 
-  const prettyDate = new Date(date).toLocaleDateString();
+  // use the same backend add flow as the modal submit
+  const fd = new FormData();
+  fd.append("title", title);
+  fd.append("description", desc);
+  fd.append("event_date", date);
+  fd.append("location", location);
+  fd.append("attendees", attendees);
 
-  // event object shape (you can extend fields)
-  const newEvent = {
-    id: 'ev_' + Date.now(),
-    title,
-    description: desc,
-    date: prettyDate,
-    isoDate: date,        // keep iso date if needed for sorting
-    location,
-    image: image || '',   // optional; events.html will show fallback image if empty
-    attendees: attendees
-  };
-
-  // save to localStorage (add to start so newest appear first)
-  const arr = loadStoredEvents();
-  arr.unshift(newEvent);
-  saveStoredEvents(arr);
-
-  // if you want to close a modal instead of redirecting, do that here.
-  // example: closeModal();
-
-  if(redirectToEvents){
-    // navigate to All Events page
-    window.location.href = 'events.html';
-  }
+  fetch("../Backend/add_event.php", { method: "POST", body: fd })
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.status === 'success') {
+        if (redirectToEvents) {
+          loadEvents();
+          window.location.href = 'events.html'; // optional behavior kept from your original function
+        }
+      } else {
+        alert("Failed to create event (legacy path).");
+      }
+    });
 
   return true;
 }
 
-/* Example: if your Create button is <button id="submitCreate">, attach handler */
+/* Attach legacy submit button if present */
 const submitBtn = document.getElementById('submitCreate');
 if(submitBtn){
-  submitBtn.addEventListener('click', function(e){
-    e.preventDefault();
-    createEventFromForm(true); // save + go to events page
+  // already attached above — this is safe to keep
+}
+
+/* fallback: if you want to auto-refresh every 30s uncomment below */
+// setInterval(loadEvents, 30000);
+
+/* ---------------------------
+   OPEN EDIT MODAL
+---------------------------- */
+function openEdit(id, title, desc, date, location, attendees){
+
+  document.getElementById('editId').value = id;
+  document.getElementById('editTitle').value = title;
+  document.getElementById('editDesc').value = desc;
+  document.getElementById('editDate').value = date;
+  document.getElementById('editLocation').value = location;
+  document.getElementById('editAtt').value = attendees;
+
+  document.getElementById("editModal").style.display = "flex";
+}
+
+/* ---------------------------
+   CLOSE EDIT MODAL
+---------------------------- */
+function closeEditModal(){
+  document.getElementById("editModal").style.display = "none";
+}
+
+/* ---------------------------
+   SAVE EDIT (update_event.php)
+---------------------------- */
+function saveEdit(){
+
+  const id = document.getElementById('editId').value;
+  const title = document.getElementById('editTitle').value.trim();
+  const desc = document.getElementById('editDesc').value.trim();
+  const date = document.getElementById('editDate').value;
+  const location = document.getElementById('editLocation').value.trim();
+  const attendees = document.getElementById('editAtt').value;
+
+  if(!title || !date){
+    alert("Title and Date are required");
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append("id", id);
+  fd.append("title", title);
+  fd.append("description", desc);
+  fd.append("event_date", date);
+  fd.append("location", location);
+  fd.append("attendees", attendees);
+
+  fetch("../Backend/update_event.php", {
+    method: "POST",
+    body: fd
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.status === "success"){
+      closeEditModal();
+      loadEvents();
+    } else {
+      alert("Update failed.");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Server error while updating event.");
   });
 }
+
+/* ----------------------
+   DELETE EVENT
+----------------------- */
+function deleteEventById(id){
+  if(!confirm("Are you sure you want to delete this event?")) return;
+
+  const fd = new FormData();
+  fd.append("id", id);
+
+  fetch("../Backend/delete_event.php", {
+    method: "POST",
+    body: fd
+  })
+  .then(res => res.json())
+  .then(data => {
+    if(data.status === "success"){
+      loadEvents();   // refresh table
+    } else {
+      alert("Failed to delete event.");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Server error while deleting.");
+  });
+}
+
 
 </script>
 </body>

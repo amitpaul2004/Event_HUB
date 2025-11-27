@@ -374,56 +374,62 @@
     <h2 id="modalTitle" class="modal-title">Register for This Event</h2>
 
     <form id="regForm" novalidate>
-      <div class="row">
-        <label>
-          <span class="lbl">Name *</span>
-          <input id="name" name="name" type="text" required />
-        </label>
+  <input type="hidden" name="event_id" value="1">
 
-        <label>
-          <span class="lbl">Email *</span>
-          <input id="email" name="email" type="email" required />
-        </label>
-      </div>
+  <div class="row">
+    <label>
+      <span class="lbl">Name *</span>
+      <input id="name" name="name" type="text" required />
+    </label>
 
-      <div class="row">
-        <label>
-          <span class="lbl">Department *</span>
-          <input id="department" name="department" type="text" required />
-        </label>
+    <label>
+      <span class="lbl">Email *</span>
+      <input id="email" name="email" type="email" required />
+    </label>
+  </div>
 
-        <label>
-          <span class="lbl">University Roll No. *</span>
-          <input id="roll" name="roll" type="text" required />
-        </label>
-      </div>
+  <div class="row">
+    <label>
+      <span class="lbl">Department *</span>
+      <input id="department" name="department" type="text" required />
+    </label>
 
-      <div class="row">
-        <label>
-          <span class="lbl">Phone *</span>
-          <input id="phone" name="phone" type="tel" inputmode="tel" pattern="\d{6,15}" required />
-        </label>
+    <label>
+      <span class="lbl">University Roll No. *</span>
+      <input id="roll" name="roll" type="text" required />
+    </label>
+  </div>
 
-        <label>
-          <span class="lbl">Food Preference</span>
-          <select id="food" name="food">
-            <option>No preference</option>
-            <option>Vegetarian</option>
-            <option>Vegan</option>
-            <option>Halal</option>
-            <option>Other</option>
-          </select>
-        </label>
-      </div>
+  <div class="row">
+    <label>
+      <span class="lbl">Phone *</span>
+      <input id="phone" name="phone" type="tel" required />
+    </label>
 
-      <div class="actions">
-        <button type="button" id="cancelBtn" class="btn-ghost">Cancel</button>
-        <button type="submit" id="submitBtn" class="btn-primary">
-          <span class="btn-text">Submit</span>
-          <span class="btn-spinner" aria-hidden="true"></span>
-        </button>
-      </div>
-    </form>
+    <label>
+      <span class="lbl">Food Preference</span>
+      <select id="food" name="food">
+        <option value="No preference">No preference</option>
+        <option value="Vegetarian">Vegetarian</option>
+        <option value="Vegan">Vegan</option>
+        <option value="Halal">Halal</option>
+        <option value="Other">Other</option>
+      </select>
+    </label>
+  </div>
+</form>
+
+
+  <div class="actions">
+    <button type="button" id="cancelBtn" class="btn-ghost">Cancel</button>
+    <button type="submit" id="submitBtn" class="btn-primary">
+      <span class="btn-text">Submit</span>
+      <span class="btn-spinner" style="display:none"></span>
+    </button>
+  </div>
+
+</form>
+
 
     <!-- success panel (hidden until submit) -->
     <div id="successPanel" class="success-panel" aria-hidden="true" style="display:none;">
@@ -755,35 +761,40 @@
       return;
     }
 
-    // disable submit & show spinner
-    const submit = e.submitter || modal.querySelector('.btn-primary');
-    if(submit) {
-      submit.disabled = true;
-      const spinner = submit.querySelector('.btn-spinner');
-      if(spinner) spinner.style.display = 'inline-block';
-    }
+    // Disable submit & show spinner
+document.getElementById("regForm").addEventListener("submit", function(e){
+  e.preventDefault();
 
-    // simulate a network / processing delay
-    setTimeout(() => {
-      // store to localStorage (demo) — optional
-      try {
-        const key = 'demo_event_regs_v2';
-        const arr = JSON.parse(localStorage.getItem(key) || '[]');
-        arr.push({...values, ts: new Date().toISOString()});
-        localStorage.setItem(key, JSON.stringify(arr));
-      } catch(e) { /* ignore */ }
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+  const spinner = submitBtn.querySelector(".btn-spinner");
+  if (spinner) spinner.style.display = "inline-block";
 
-      // play success animation
-      playSuccessAnimation();
+  let formData = new FormData(this);
 
-      // re-enable submit button for future use
-      if(submit) {
-        submit.disabled = false;
-        const spinner = submit.querySelector('.btn-spinner');
-        if(spinner) spinner.style.display = 'none';
-      }
-    }, 700);
+  fetch("http://localhost/Event_HUB-main/Backend/add_attendee.php", {
+      method: "POST",
+      body: formData
+  })
+  .then(res => res.text())   // ⬅ change from JSON to TEXT
+  .then(data => {
+      console.log("Server says:", data);
+
+      // Optional: show success popup or animation
+      playSuccessAnimation(); 
+      alert("Registration Successful 🎉");
+
+      document.getElementById("regForm").reset();
+  })
+  .catch(err => {
+      console.error(err);
+      alert("❌ Error submitting form. Please try again.");
+  })
+  .finally(() => {
+      submitBtn.disabled = false;
+      if (spinner) spinner.style.display = "none";
   });
+});
 
   /* ========== Simple Confetti System ========== */
   let confettiCtx, confettiAnimId, confettiParticles = [], confettiRunning = false;
@@ -867,7 +878,7 @@
   // initial hide of successPanel and ensure canvas size
   if(successPanel) { successPanel.style.display = 'none'; }
   if(confettiCanvas) { confettiCanvas.style.width = '100%'; confettiCanvas.style.height = '100%'; confettiCanvas.width = modal.clientWidth; confettiCanvas.height = modal.clientHeight; }
-
+  })
 })();
 
 </script>

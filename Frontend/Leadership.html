@@ -373,7 +373,9 @@
 
     <h2 id="modalTitle" class="modal-title">Register for This Event</h2>
 
-    <form id="regForm" novalidate>
+    <form id="regForm">
+   <input type="hidden" name="event_id" value="1"> <!-- REQUIRED -->
+
       <div class="row">
         <label>
           <span class="lbl">Name *</span>
@@ -420,10 +422,44 @@
         <button type="button" id="cancelBtn" class="btn-ghost">Cancel</button>
         <button type="submit" id="submitBtn" class="btn-primary">
           <span class="btn-text">Submit</span>
-          <span class="btn-spinner" aria-hidden="true"></span>
+          <span class="btn-spinner" style="display:none"></span>
         </button>
       </div>
     </form>
+
+    <script>
+document.getElementById("regForm").addEventListener("submit", function(e){
+  e.preventDefault();
+
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+  const spinner = submitBtn.querySelector(".btn-spinner");
+  if (spinner) spinner.style.display = "inline-block";
+
+  let formData = new FormData(this);
+
+  fetch("../Backend/add_attendee.php", {
+      method: "POST",
+      body: formData
+  })
+  .then(r => r.text())
+  .then(res => {
+      console.log("Server response:", res);
+
+      alert("Registration Successful 🎉");
+      document.getElementById("regForm").reset(); 
+  })
+  .catch(err => {
+      alert("❌ Error submitting form. Please try again.");
+      console.error(err);
+  })
+  .finally(() => {
+      submitBtn.disabled = false;
+      if (spinner) spinner.style.display = "none";
+  });
+});
+</script>
+
 
     <!-- success panel (hidden until submit) -->
     <div id="successPanel" class="success-panel" aria-hidden="true" style="display:none;">
@@ -763,27 +799,33 @@
       if(spinner) spinner.style.display = 'inline-block';
     }
 
-    // simulate a network / processing delay
-    setTimeout(() => {
-      // store to localStorage (demo) — optional
-      try {
-        const key = 'demo_event_regs_v2';
-        const arr = JSON.parse(localStorage.getItem(key) || '[]');
-        arr.push({...values, ts: new Date().toISOString()});
-        localStorage.setItem(key, JSON.stringify(arr));
-      } catch(e) { /* ignore */ }
+    document.getElementById("regForm").addEventListener("submit", async function(e){
+  e.preventDefault();
 
-      // play success animation
-      playSuccessAnimation();
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+  submitBtn.querySelector(".btn-spinner").style.display = "inline-block";
 
-      // re-enable submit button for future use
-      if(submit) {
-        submit.disabled = false;
-        const spinner = submit.querySelector('.btn-spinner');
-        if(spinner) spinner.style.display = 'none';
-      }
-    }, 700);
+  let formData = new FormData(this);
+
+  let response = await fetch("http://localhost/Event_HUB-main/Backend/add_attendee.php", {
+      method: "POST",
+      body: formData
   });
+
+  let result = await response.json();
+  alert(result.message);
+
+  if (result.status === "success") {
+      this.reset();
+  }
+
+  submitBtn.disabled = false;
+  submitBtn.querySelector(".btn-spinner").style.display = "none";
+});
+
+
+
 
   /* ========== Simple Confetti System ========== */
   let confettiCtx, confettiAnimId, confettiParticles = [], confettiRunning = false;
@@ -867,7 +909,7 @@
   // initial hide of successPanel and ensure canvas size
   if(successPanel) { successPanel.style.display = 'none'; }
   if(confettiCanvas) { confettiCanvas.style.width = '100%'; confettiCanvas.style.height = '100%'; confettiCanvas.width = modal.clientWidth; confettiCanvas.height = modal.clientHeight; }
-
+  })
 })();
 
 </script>
