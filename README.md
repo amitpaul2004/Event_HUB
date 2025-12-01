@@ -41,21 +41,7 @@ https://screenapp.io/app/v/cs2qhILKs8
 | Frontend | HTML, CSS, JavaScript, Bootstrap |
 | Backend  | PHP (Core PHP) |
 | Database | MySQL |
-| Server   | Apache (XAMPP/WAMP/LAMP) |
-
----
-
-## 📂 Project Folder Structure
-Event_HUB/
-│── assets/ # Images, styles, scripts
-│── backend/ # Backend PHP logic
-│── database/ # SQL file for database
-│── includes/ # Header, footer, navbar components
-│── pages/ # Frontend pages
-│── config.php # Database connection
-│── index.php # Homepage
-│── README.md # Project documentation
-
+| Server   | Apache (XAMPP/APACHE)
 
 ---
 
